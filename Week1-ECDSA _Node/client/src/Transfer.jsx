@@ -1,6 +1,6 @@
 import { useState } from "react";
 import server from "./server";
-import  { secp256k1 } from "ethereum-cryptography/secp256k1.js";
+import * as secp256k1 from "ethereum-cryptography/secp256k1.js";
 import { keccak256 } from "ethereum-cryptography/keccak.js";
 import { toHex, utf8ToBytes } from "ethereum-cryptography/utils.js";
 
@@ -13,7 +13,7 @@ function Transfer({ address, setBalance }) {
 
   const setValue = (setter) => (evt) => setter(evt.target.value);
   let msgHash = "";
-  var msgSign;
+  let msgSign = [];
 
 
   async function transfer(evt) {
@@ -45,19 +45,21 @@ function Transfer({ address, setBalance }) {
       amount: ${sendAmount},
       ${recipient}`)
     );
-
-    [msgSign, recoveryBit ] = await secp256k1.sign(msgHash, pKey ,{
-      recovered: true
-    });
-    console.log(msgSign);
+    console.log("msg ",msgHash)
+    console.log("private",pKey)
 
     msgHash = toHex(msgHash);
-    msgSign = toHex(msgSign);
-    setPrivateKeySignature(msgSign);
+    msgSign = await secp256k1.sign(msgHash, pKey ,{
+      recovered: true
+  });
+
+    console.log(msgSign);
+
+    setPrivateKeySignature(toHex(msgSign[0]));
     setSigned(true)
     console.log("Key Signed");
     console.log(`Key : ${msgSign}`);
-    isSigned = true
+
   }
 
   return (
