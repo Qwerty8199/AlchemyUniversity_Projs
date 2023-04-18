@@ -12,53 +12,72 @@ function Transfer({ address, setBalance }) {
   const [isSigned, setSigned] = useState(false)
 
   const setValue = (setter) => (evt) => setter(evt.target.value);
-  let msgHash = "";
-  let msgSign = [];
-
+  const [msgHash, setMsgHash] = useState("");
+  const [recBit, setRecBit] = useState(0);
 
   async function transfer(evt) {
     evt.preventDefault();
 
+    if(!isSigned){
+      alert("Sign the Transaction");
+      return
+    }
+
     try {
       const {
-        data: { balance },
+        data : { balance, message },
       } = await server.post(
         `send`, {
           sender: address,
           amount: parseInt(sendAmount),
-          recipient,
-          msgHash,
-          msgSign
+          recipient: recipient,
+          msgHash: msgHash,
+          msgSignHex: privateKeySignature,
+          recBit: recBit
         });
       setBalance(balance);
+      alert(message);
     } catch (ex) {
       alert(ex.response.data.message);
     }
+    setPrivateKeySignature("")
+    setprivateKey("")
+    setMsgHash("")
+    setSigned(false)
   }
 
   async function SignTheKey(){
-    console.log("Signing the Key");
-    const pKey = privateKey
 
-    msgHash = keccak256(
-      utf8ToBytes(`sender: ${address},
+    if(privateKey.length != 64){
+      alert("Enter Valid PrivateKey");
+      return
+    }
+
+    let _msgHash = toHex(keccak256(
+      utf8ToBytes(JSON.stringify(`sender: ${address},
       amount: ${sendAmount},
-      ${recipient}`)
-    );
-    console.log("msg ",msgHash)
-    console.log("private",pKey)
+      ${recipient}`))
+    ));
 
-    msgHash = toHex(msgHash);
-    msgSign = await secp256k1.sign(msgHash, pKey ,{
-      recovered: true
-  });
+    setMsgHash(_msgHash);
 
-    console.log(msgSign);
+    try{
+      let [ _msgSignHex, _recBit ] = 
+        await secp256k1.sign(_msgHash,
+                             privateKey ,{
+        recovered: true
+      });
 
-    setPrivateKeySignature(toHex(msgSign[0]));
-    setSigned(true)
-    console.log("Key Signed");
-    console.log(`Key : ${msgSign}`);
+      setRecBit(_recBit);
+
+      _msgSignHex = toHex(_msgSignHex);
+      setPrivateKeySignature(_msgSignHex);
+
+      setSigned(true);
+
+    }catch(ex){
+      console.log(ex)
+    }
 
   }
 
