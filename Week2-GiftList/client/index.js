@@ -10,17 +10,17 @@ async function main() {
   const merkleTree = new MerkleTree(niceList);
 
 // get the root
-  const root = merkleTree.getRoot();
+  // const root = merkleTree.getRoot();
+  // console.log("root",root)
 
   // find the proof that norman block is in the list 
-  const name = 'Norman Black';
+  const name = 'Norman Block';
   const index = niceList.findIndex(n => n === name);
   const proof = merkleTree.getProof(index);
 
   const { data: gift } = await axios.post(`${serverUrl}/gift`, {
     name : name,
     proof: proof,
-    root: root
   });
 
   console.log({ gift });
