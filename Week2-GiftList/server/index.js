@@ -12,10 +12,14 @@ const MERKLE_ROOT = '';
 
 app.post('/gift', (req, res) => {
   // grab the parameters from the front-end here
-  const body = req.body;
+  const {
+    name : name,
+    proof: proof,
+    root: root
+  } = req.body;
 
   // TODO: prove that a name is in the list 
-  const isInTheList = false;
+  const isInTheList = verifyProof(proof, name, root);
   if(isInTheList) {
     res.send("You got a toy robot!");
   }
